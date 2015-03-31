@@ -38,7 +38,7 @@ def roll_initiative(mod):
     return d10() + mod
 
 
-def run_match():
+def run_match(PRINT=True):
     players = [
         #                             I  HP  AC ATK DMG
         Mans('Jimmy',  LightCrossbow, 4, 10, 16,  7,  1),
@@ -63,15 +63,18 @@ def run_match():
             initiatives[roll].append(mans)
 
         # TODO: Make all the enemies act at once?
-        print 'Initiative order:'
         init_order = sorted(initiatives.keys(), reverse=True)
-        for t in init_order:
-            print '%5d:' % t, ', '.join(
-                '%s (%d)' % (m['name'], m['hp']) for m in initiatives[t])
+        if PRINT:
+            print 'Initiative order:'
+            for t in init_order:
+                print '%5d:' % t, ', '.join(
+                    '%s (%d)' % (m['name'], m['hp'])
+                    for m in initiatives[t])
 
         # Process actual actions. They're all attacks.
         for t in init_order:
-            print t
+            if PRINT:
+                print t
             # Keep a queue of damages to apply at the end of each
             # initiative order, since a mans acting at the same time as
             # the person who strikes them down will still get an attack
@@ -82,7 +85,8 @@ def run_match():
                 # Incapacitated people can't do anything.
                 if mans['hp'] <= 0:
                     # TODO: Bleedout?
-                    print mans['name'], 'is down for the count.'
+                    if PRINT:
+                        print mans['name'], 'is down for the count.'
                     continue
 
                 # Select an active target at random.
@@ -94,55 +98,63 @@ def run_match():
                     enemies = badguys
                 enemies = [e for e in enemies if is_active(e)]
                 if not enemies:
-                    print mans['name'], 'twiddles their thumbs.'
+                    if PRINT:
+                        print mans['name'], 'twiddles their thumbs.'
                     continue
                 target = random.choice(enemies)
 
                 # Try to attack it.
-                print mans['name'], 'attacks', target['name'], 
-                print 'with their', mans['weapon'].name, 'and',
+                if PRINT:
+                    print mans['name'], 'attacks', target['name'], 
+                    print 'with their', mans['weapon'].name, 'and',
                 base_roll = d20()
                 base_damage = mans['weapon'].damage() + mans['dmg_bonus']
                 if base_roll >= mans['weapon'].crit_min:
-                    print 'scores a CRITICAL HIT!'
+                    if PRINT:
+                        print 'scores a CRITICAL HIT!'
                     damages.append(
                         (target, base_damage * mans['weapon'].crit_mult))
                 elif base_roll + mans['atk_bonus'] >= target['ac']:
-                    print 'scores a hit!'
+                    if PRINT:
+                        print 'scores a hit!'
                     damages.append((target, base_damage))
                 else:
-                    print 'misses.'
+                    if PRINT:
+                        print 'misses.'
 
                 # Apply damages.
                 for mans, damage in damages:
                     was_active = is_active(mans)
                     mans['hp'] -= damage
-                    print mans['name'], 'takes', damage,
-                    print 'damage and is now at', mans['hp'], 'HP.'
-                    if was_active and not is_active(mans):
-                        print mans['name'], 'has died.'
+                    if PRINT:
+                        print mans['name'], 'takes', damage,
+                        print 'damage and is now at', mans['hp'], 'HP.'
+                        if was_active and not is_active(mans):
+                            print mans['name'], 'has died.'
 
     turn = 0
     while (any(is_active(m) for m in players) and
            any(is_active(m) for m in badguys)):
         turn += 1
-        print '=== TURN %d ===' % turn
+        if PRINT:
+            print '=== TURN %d ===' % turn
         run_turn()
 
     players_left = any(is_active(m) for m in players)
     badguys_left = any(is_active(m) for m in badguys)
-    if not players_left:
-        print 'Players are ALL DEAD.'
-    if not badguys_left:
-        print 'Monsters have all died.'
+    if PRINT:
+        if not players_left:
+            print 'Players are ALL DEAD.'
+        if not badguys_left:
+            print 'Monsters have all died.'
 
     return players_left, badguys_left
 
 wins = 0
 losses = 0
 ties = 0
-for i in range(100):
-    p, m = run_match()
+for i in range(10000):
+    p, m = run_match(PRINT=False)
     assert not (p and m)
     if p == m:
         ties += 1
