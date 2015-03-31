@@ -102,14 +102,19 @@ def run_match(PRINT=True):
                 target = random.choice(enemies)
 
                 # Try to attack it.
-                if PRINT:
-                    print mans['name'], 'attacks', target['name'], 
-                    print 'with their', mans['weapon'].name, 'and',
                 base_roll = d20()
                 base_damage = mans['weapon'].damage() + mans['dmg_bonus']
+                if PRINT:
+                    print mans['name'], 'attacks', target['name'],
+                    print 'with their', mans['weapon'].name,
+                    print '(%d + %d vs %d)' % (
+                        base_roll, mans['atk_bonus'], target['ac']),
+                    print 'and',
                 if base_roll >= mans['weapon'].crit_min:
                     if PRINT:
-                        print 'scores a CRITICAL HIT!'
+                        print 'scores a CRITICAL HIT!',
+                        print '(%dx%d)' % (base_damage,
+                                           mans['weapon'].crit_mult)
                     damages.append(
                         (target, base_damage * mans['weapon'].crit_mult))
                 elif base_roll + mans['atk_bonus'] >= target['ac']:
