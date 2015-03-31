@@ -153,20 +153,25 @@ def run_match(PRINT=True):
 
     return players_left, badguys_left
 
-wins = 0
-losses = 0
-ties = 0
-for i in range(10000):
-    p, m = run_match(PRINT=False)
+import sys
+if len(sys.argv) > 1:
+    RUNS = int(sys.argv[1])
+    wins = 0
+    losses = 0
+    ties = 0
+    for i in range(RUNS):
+        p, m = run_match(PRINT=False)
+        assert not (p and m)
+        if p == m:
+            ties += 1
+        elif p:
+            wins += 1
+        elif m:
+            losses += 1
+
+    print wins, losses, ties
+else:
+    p, m = run_match(PRINT=True)
     assert not (p and m)
-    if p == m:
-        ties += 1
-    elif p:
-        wins += 1
-    elif m:
-        losses += 1
-
-print wins, losses, ties
-
 
     
