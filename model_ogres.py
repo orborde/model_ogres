@@ -50,7 +50,7 @@ def run_match(PRINT=True):
     ]
 
     # TODO: Vary the enemy stats across runs, since they're random.
-    badguys = [
+    badguysqueue = [
         # Attack mod differs from the one in the SRD.
         Mans('Ogre %d' % i, GreatClub, -1,
              d8()+d8()+d8()+d8()+11,
@@ -139,12 +139,19 @@ def run_match(PRINT=True):
                             print mans['name'], 'has died.'
 
     turn = 0
+    badguys = [badguysqueue.pop(0)]
     while (any(is_active(m) for m in players) and
            any(is_active(m) for m in badguys)):
         turn += 1
         if PRINT:
             print '=== TURN %d ===' % turn
         run_turn()
+        if not any(is_active(m) for m in badguys):
+            if badguysqueue:
+                bg = badguysqueue.pop(0)
+                badguys.append(bg)
+                if PRINT:
+                    print bg['name'], 'enters the fight.'
 
     players_left = any(is_active(m) for m in players)
     badguys_left = any(is_active(m) for m in badguys)
