@@ -64,10 +64,8 @@ def run_turn():
     print 'Initiative order:'
     init_order = sorted(initiatives.keys(), reverse=True)
     for t in init_order:
-        print '%5d:' % t,
-        for m in initiatives[t]:
-            print m['name'],
-        print
+        print '%5d:' % t, ', '.join(
+            '%s (%d)' % (m['name'], m['hp']) for m in initiatives[t])
     
     # Process actual actions. They're all attacks.
     for t in init_order:
