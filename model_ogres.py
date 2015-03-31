@@ -26,7 +26,7 @@ BastardSword = Weapon('Bastard Sword', d10, 19, 2)
 GreatClub = Weapon('Great Club', lambda: d8()+d8()+7, 20, 2)
 
 mansattrs = ['name', 'weapon', 'initiative_mod', 'hp', 'ac',
-             'atk_bonus', 'dmg_bonus']
+             'atk_bonus', 'dmg_bonus', 'attacks_per_round']
 def Mans(*arg):
     assert len(arg) == len(mansattrs)
     return dict(zip(mansattrs, arg))
@@ -40,19 +40,21 @@ def roll_initiative(mod):
 
 def run_match(PRINT=True):
     players = [
-        #                             I  HP  AC ATK DMG
-        Mans('Jimmy',  LightCrossbow, 4, 10, 16,  7,  1),
-        Mans('Erie',   Scimitar,      1, 16, 13,  0,  0),
-        Mans('SaucyD', LightCrossbow, 2, 12, 15,  5,  0),
-        Mans('Sully',  ShortSpear,    2, 16, 12,  4,  0),
+        #                             I  HP  AC ATK DMG APR
+        Mans('Jimmy',  LightCrossbow, 4, 10, 16,  7,  1,  1),
+        Mans('Erie',   Scimitar,      1, 16, 13,  0,  0,  1),
+        Mans('SaucyD', LightCrossbow, 2, 12, 15,  5,  0,  1),
+        Mans('Sully',  ShortSpear,    2, 16, 12,  2,  0,  2),
         # Forgot to write down Lancelot's STR mod :(. Guessing it's 2?
-        Mans('Lance',  BastardSword,  1, 28, 15,  6,  2)
+        Mans('Lance',  BastardSword,  1, 28, 15,  6,  2,  1)
     ]
 
     # TODO: Vary the enemy stats across runs, since they're random.
     badguys = [
         # Attack mod differs from the one in the SRD.
-        Mans('Ogre %d' % i, GreatClub, -1, d8()+d8()+d8()+d8()+11, 16, 7, 0)
+        Mans('Ogre %d' % i, GreatClub, -1,
+             d8()+d8()+d8()+d8()+11,
+             16, 7, 0, 1)
         for i in range(1, 4+1)
     ]
 
@@ -102,28 +104,29 @@ def run_match(PRINT=True):
                 target = random.choice(enemies)
 
                 # Try to attack it.
-                base_roll = d20()
-                base_damage = mans['weapon'].damage() + mans['dmg_bonus']
-                if PRINT:
-                    print mans['name'], 'attacks', target['name'],
-                    print 'with their', mans['weapon'].name,
-                    print '(%d + %d vs %d)' % (
-                        base_roll, mans['atk_bonus'], target['ac']),
-                    print 'and',
-                if base_roll >= mans['weapon'].crit_min:
+                for i in range(mans['attacks_per_round']):
+                    base_roll = d20()
+                    base_damage = mans['weapon'].damage() + mans['dmg_bonus']
                     if PRINT:
-                        print 'scores a CRITICAL HIT!',
-                        print '(%dx%d)' % (base_damage,
-                                           mans['weapon'].crit_mult)
-                    damages.append(
-                        (target, base_damage * mans['weapon'].crit_mult))
-                elif base_roll + mans['atk_bonus'] >= target['ac']:
-                    if PRINT:
-                        print 'scores a hit!'
-                    damages.append((target, base_damage))
-                else:
-                    if PRINT:
-                        print 'misses.'
+                        print mans['name'], 'attacks', target['name'],
+                        print 'with their', mans['weapon'].name,
+                        print '(%d + %d vs %d)' % (
+                            base_roll, mans['atk_bonus'], target['ac']),
+                        print 'and',
+                    if base_roll >= mans['weapon'].crit_min:
+                        if PRINT:
+                            print 'scores a CRITICAL HIT!',
+                            print '(%dx%d)' % (base_damage,
+                                               mans['weapon'].crit_mult)
+                        damages.append(
+                            (target, base_damage * mans['weapon'].crit_mult))
+                    elif base_roll + mans['atk_bonus'] >= target['ac']:
+                        if PRINT:
+                            print 'scores a hit!'
+                        damages.append((target, base_damage))
+                    else:
+                        if PRINT:
+                            print 'misses.'
 
                 # Apply damages.
                 for mans, damage in damages:
