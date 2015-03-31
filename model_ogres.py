@@ -73,8 +73,6 @@ def run_match(PRINT=True):
 
         # Process actual actions. They're all attacks.
         for t in init_order:
-            if PRINT:
-                print t
             # Keep a queue of damages to apply at the end of each
             # initiative order, since a mans acting at the same time as
             # the person who strikes them down will still get an attack
